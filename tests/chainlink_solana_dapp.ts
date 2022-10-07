@@ -23,6 +23,7 @@ describe("chainlink_solana_dapp", () => {
       signers: [resultAccount]
     })
     const latestPrice = await program.account.resultAccount.fetch(resultAccount.publicKey)
-    console.log("Price is: ", latestPrice / 100000000)
+    console.log("latestPrice in result account: ", latestPrice.value)
+    console.log("Price is: ", latestPrice.value / 100000000)
   })
 });
