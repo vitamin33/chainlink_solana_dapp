@@ -1,16 +1,28 @@
 import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
-import { ChainlinkSolanaDapp } from "../target/types/chainlink_solana_dapp";
+import {Program} from "@project-serum/anchor";
+
+const CHAINLINK_FEED = "HgTtcbcmp5BeThax5AU8vg4VwK79qAvAKKFMs8txMLW6"
+const CHAINLINK_PROGRAM_ID = "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny"
 
 describe("chainlink_solana_dapp", () => {
-  // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+    // Configure the client to use the local cluster.
+    const provider = anchor.AnchorProvider.env()
+    anchor.setProvider(provider);
+    const program = anchor.workspace.ChainlinkSolanaDapp
 
-  const program = anchor.workspace.ChainlinkSolanaDapp as Program<ChainlinkSolanaDapp>;
-
-  it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
-  });
+  it("Queries SOL/USD price feed", async () => {
+    const resultAccount = anchor.web3.Keypair.generate()
+    await program.rpc.execute({
+      accounts: {
+        resultAccount: resultAccount.publicKey,
+        user: provider.wallet.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        chainlinkFeed: CHAINLINK_FEED,
+        chainlinkProgram: CHAINLINK_PROGRAM_ID
+      },
+      signers: [resultAccount]
+    })
+    const latestPrice = await program.account.resultAccount.fetch(resultAccount.publicKey)
+    console.log("Price is: ", latestPrice / 100000000)
+  })
 });
